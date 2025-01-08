@@ -55,6 +55,7 @@ int main(int argc, char *argv[])
     int brushSize = 6; // Brush size (16x16)
     int lastX = -1, lastY = -1; // To track the last position of the mouse
     Uint32 brushColor = 0xFF000000; // Default brush color (black)
+    bool circularBrush = true; // Default brush shape is circular
 
     while (running) {
         while (SDL_PollEvent(&event)) {
@@ -83,14 +84,22 @@ int main(int argc, char *argv[])
                         int interpY = lastY + t * dy;
 
                         // Draw the brush at each interpolated position
-                        for (int dy = 0; dy < brushSize; dy++) {
-                            for (int dx = 0; dx < brushSize; dx++) {
-                                int drawX = interpX + dx - brushSize / 2;
-                                int drawY = interpY + dy - brushSize / 2;
+                        for (int dy = -brushSize / 2; dy <= brushSize / 2; dy++) {
+                            for (int dx = -brushSize / 2; dx <= brushSize / 2; dx++) {
+                                int drawX = interpX + dx;
+                                int drawY = interpY + dy;
 
                                 // Check bounds to prevent drawing outside the screen
                                 if (drawX >= 0 && drawX < SCREEN_WIDTH && drawY >= 0 && drawY < SCREEN_HEIGHT) {
-                                    pixels[drawY * SCREEN_WIDTH + drawX] = brushColor;
+                                    if (circularBrush) {
+                                        // Draw circular brush
+                                        if (dx * dx + dy * dy <= (brushSize / 2) * (brushSize / 2)) {
+                                            pixels[drawY * SCREEN_WIDTH + drawX] = brushColor;
+                                        }
+                                    } else {
+                                        // Draw square brush
+                                        pixels[drawY * SCREEN_WIDTH + drawX] = brushColor;
+                                    }
                                 }
                             }
                         }
@@ -121,6 +130,12 @@ int main(int argc, char *argv[])
                         break;
                     case SDLK_5:
                         brushColor = 0xFFFFA500; // Orange
+                        break;
+                    case SDLK_q:
+                        circularBrush = true; // Set brush to circular
+                        break;
+                    case SDLK_w:
+                        circularBrush = false; // Set brush to square
                         break;
                 }
             }
