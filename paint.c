@@ -54,6 +54,7 @@ int main(int argc, char *argv[])
     bool drawing = false;
     int brushSize = 6; // Brush size (16x16)
     int lastX = -1, lastY = -1; // To track the last position of the mouse
+    Uint32 brushColor = 0xFF000000; // Default brush color (black)
 
     while (running) {
         while (SDL_PollEvent(&event)) {
@@ -89,7 +90,7 @@ int main(int argc, char *argv[])
 
                                 // Check bounds to prevent drawing outside the screen
                                 if (drawX >= 0 && drawX < SCREEN_WIDTH && drawY >= 0 && drawY < SCREEN_HEIGHT) {
-                                    pixels[drawY * SCREEN_WIDTH + drawX] = 0xFF000000; // Black (ARGB: 255, 0, 0, 0)
+                                    pixels[drawY * SCREEN_WIDTH + drawX] = brushColor;
                                 }
                             }
                         }
@@ -98,10 +99,29 @@ int main(int argc, char *argv[])
 
                 lastX = x;
                 lastY = y;
-            } else if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE) {
-                // Clear the screen to white
-                for (int i = 0; i < SCREEN_WIDTH * SCREEN_HEIGHT; i++) {
-                    pixels[i] = 0xFFFFFFFF; // White (ARGB: 255, 255, 255, 255)
+            } else if (event.type == SDL_KEYDOWN) {
+                switch (event.key.keysym.sym) {
+                    case SDLK_ESCAPE:
+                        // Clear the screen to white
+                        for (int i = 0; i < SCREEN_WIDTH * SCREEN_HEIGHT; i++) {
+                            pixels[i] = 0xFFFFFFFF; // White (ARGB: 255, 255, 255, 255)
+                        }
+                        break;
+                    case SDLK_1:
+                        brushColor = 0xFF000000; // Black
+                        break;
+                    case SDLK_2:
+                        brushColor = 0xFFFF0000; // Red
+                        break;
+                    case SDLK_3:
+                        brushColor = 0xFF0000FF; // Blue
+                        break;
+                    case SDLK_4:
+                        brushColor = 0xFF00FF00; // Green
+                        break;
+                    case SDLK_5:
+                        brushColor = 0xFFFFA500; // Orange
+                        break;
                 }
             }
         }
