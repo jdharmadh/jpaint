@@ -1,0 +1,6 @@
+.vscode
+
+*.dSYM
+
+# ignore executables built by gcc
+paint
