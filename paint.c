@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
         return 3;
     }
 
-    window = SDL_CreateWindow("Simple Paint Program",
+    window = SDL_CreateWindow("jpaint",
                               SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                               SCREEN_WIDTH, SCREEN_HEIGHT, 0);
 
@@ -98,6 +98,11 @@ int main(int argc, char *argv[])
 
                 lastX = x;
                 lastY = y;
+            } else if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE) {
+                // Clear the screen to white
+                for (int i = 0; i < SCREEN_WIDTH * SCREEN_HEIGHT; i++) {
+                    pixels[i] = 0xFFFFFFFF; // White (ARGB: 255, 255, 255, 255)
+                }
             }
         }
 
