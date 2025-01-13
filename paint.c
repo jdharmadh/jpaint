@@ -2,7 +2,9 @@
 #include <stdbool.h>
 
 #include "SDL.h"
+#include "stack.h"
 
+enum BrushShape { CIRCULAR, SQUARE, FILL, ERASE_BRUSH, ERASE_FILL };
 int main(int argc, char *argv[]) {
   SDL_Window *window;
   SDL_Renderer *renderer;
@@ -60,7 +62,7 @@ int main(int argc, char *argv[]) {
   int brushSize = 6;               // Brush size (16x16)
   int lastX = -1, lastY = -1;      // To track the last position of the mouse
   Uint32 brushColor = 0xFF000000;  // Default brush color (black)
-  bool circularBrush = true;       // Default brush shape is circular
+  int brushShape = CIRCULAR;       // Default brush shape
 
   while (running) {
     while (SDL_PollEvent(&event)) {
@@ -100,15 +102,22 @@ int main(int argc, char *argv[]) {
                 // Check bounds to prevent drawing outside the screen
                 if (drawX >= 0 && drawX < SCREEN_WIDTH && drawY >= 0 &&
                     drawY < SCREEN_HEIGHT) {
-                  if (circularBrush) {
+                  if (brushShape == CIRCULAR) {
                     // Draw circular brush
                     if (dx * dx + dy * dy <=
                         (brushSize / 2) * (brushSize / 2)) {
                       pixels[drawY * SCREEN_WIDTH + drawX] = brushColor;
                     }
-                  } else {
+                  } else if (brushShape == SQUARE) {
                     // Draw square brush
                     pixels[drawY * SCREEN_WIDTH + drawX] = brushColor;
+                  } else if (brushShape == FILL) {
+                    // fill
+                  } else if (brushShape == ERASE_BRUSH) {
+                    // erase brush
+                    pixels[drawY * SCREEN_WIDTH + drawX] = 0xFFFFFFFF;
+                  } else if (brushShape == ERASE_FILL) {
+                    // erase fill
                   }
                 }
               }
@@ -142,10 +151,19 @@ int main(int argc, char *argv[]) {
             brushColor = 0xFFFFA500;  // Orange
             break;
           case SDLK_q:
-            circularBrush = true;  // Set brush to circular
+            brushShape = CIRCULAR;
             break;
           case SDLK_w:
-            circularBrush = false;  // Set brush to square
+            brushShape = SQUARE;
+            break;
+          case SDLK_e:
+            brushShape = FILL;
+            break;
+          case SDLK_r:
+            brushShape = ERASE_BRUSH;
+            break;
+          case SDLK_t:
+            brushShape = ERASE_FILL;
             break;
         }
       }
