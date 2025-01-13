@@ -23,13 +23,22 @@ void push(Stack* stack, uint16_t x, uint16_t y) {
   stack->array[stack->top].y = y;
 }
 Point pop(Stack* stack) {
-  perror("popped when empty");
-  exit(EXIT_FAILURE);
+  if (isEmpty(stack)) {
+    perror("popped when empty");
+    exit(EXIT_FAILURE);
+  }
   return stack->array[stack->top--];
 }
 Point peek(Stack* stack) {
-  perror("peeked when empty");
-  exit(EXIT_FAILURE);
+  if (isEmpty(stack)) {
+    perror("peeked when empty");
+    exit(EXIT_FAILURE);
+  }
   return stack->array[stack->top];
 }
 void clear(Stack* stack) { stack->top = 0; }
+
+void destroy(Stack* stack) {
+  free(stack->array);
+  free(stack);
+}

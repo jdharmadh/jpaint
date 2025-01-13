@@ -20,5 +20,6 @@ void push(Stack* stack, uint16_t x, uint16_t y);
 Point pop(Stack* stack);
 Point peek(Stack* stack);
 void clear(Stack* stack);
+void destroy(Stack* stack);
 
 #endif  // STACK_H_
