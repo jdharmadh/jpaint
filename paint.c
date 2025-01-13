@@ -1,19 +1,23 @@
 #include <math.h>  // For sqrt and pow
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "SDL.h"
 #include "stack.h"
 
 enum BrushShape { CIRCULAR, SQUARE, FILL, ERASE_BRUSH, ERASE_FILL };
+
+// Screen dimensions
+const int SCREEN_WIDTH = 800;
+const int SCREEN_HEIGHT = 600;
+
+void fill(uint32_t *pixels, int x, int y, uint32_t fillColor);
+
 int main(int argc, char *argv[]) {
   SDL_Window *window;
   SDL_Renderer *renderer;
   SDL_Texture *texture;
   SDL_Event event;
-
-  // Screen dimensions
-  const int SCREEN_WIDTH = 800;
-  const int SCREEN_HEIGHT = 600;
 
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't initialize SDL: %s",
@@ -40,7 +44,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Create a pixel buffer (ARGB format)
-  Uint32 *pixels = calloc(SCREEN_WIDTH * SCREEN_HEIGHT, sizeof(Uint32));
+  uint32_t *pixels = calloc(SCREEN_WIDTH * SCREEN_HEIGHT, sizeof(uint32_t));
 
   if (!pixels) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -59,10 +63,10 @@ int main(int argc, char *argv[]) {
 
   bool running = true;
   bool drawing = false;
-  int brushSize = 6;               // Brush size (16x16)
-  int lastX = -1, lastY = -1;      // To track the last position of the mouse
-  Uint32 brushColor = 0xFF000000;  // Default brush color (black)
-  int brushShape = CIRCULAR;       // Default brush shape
+  int brushSize = 6;                 // Brush size (16x16)
+  int lastX = -1, lastY = -1;        // To track the last position of the mouse
+  uint32_t brushColor = 0xFF000000;  // Default brush color (black)
+  int brushShape = CIRCULAR;         // Default brush shape
 
   while (running) {
     while (SDL_PollEvent(&event)) {
@@ -73,6 +77,9 @@ int main(int argc, char *argv[]) {
         drawing = true;
         lastX = event.motion.x;
         lastY = event.motion.y;
+        if (brushShape == FILL) {
+          fill(pixels, lastX, lastY, brushColor);
+        }
       } else if (event.type == SDL_MOUSEBUTTONUP &&
                  event.button.button == SDL_BUTTON_LEFT) {
         drawing = false;
@@ -112,7 +119,7 @@ int main(int argc, char *argv[]) {
                     // Draw square brush
                     pixels[drawY * SCREEN_WIDTH + drawX] = brushColor;
                   } else if (brushShape == FILL) {
-                    // fill
+                    //
                   } else if (brushShape == ERASE_BRUSH) {
                     // erase brush
                     pixels[drawY * SCREEN_WIDTH + drawX] = 0xFFFFFFFF;
@@ -170,7 +177,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Update the texture with the pixel buffer
-    SDL_UpdateTexture(texture, NULL, pixels, SCREEN_WIDTH * sizeof(Uint32));
+    SDL_UpdateTexture(texture, NULL, pixels, SCREEN_WIDTH * sizeof(uint32_t));
 
     // Render the texture
     SDL_RenderClear(renderer);
@@ -186,4 +193,45 @@ int main(int argc, char *argv[]) {
   SDL_Quit();
 
   return 0;
+}
+
+void fill(uint32_t *pixels, int x, int y, uint32_t fillColor) {
+  Stack *stack = createStack(1000);
+  uint32_t originalColor = pixels[y * SCREEN_WIDTH + x];
+  push(stack, x, y);
+  while (!isEmpty(stack)) {
+    // printf("Stack size: %d\n", stack->top);
+    // printf("Original color: %x\n", originalColor);
+    // printf("Fill color: %x\n", fillColor);
+    Point p = pop(stack);
+    x = p.x;
+    y = p.y;
+    if (x < 0 || x >= SCREEN_WIDTH || y < 0 || y >= SCREEN_HEIGHT) {
+      // printf("Skipping 1\n");
+      // printf("x: %d, y: %d\n", x, y);
+      continue;
+    }
+    uint32_t currentColor = pixels[y * SCREEN_WIDTH + x];
+    // printf("Current color: %x\n", currentColor);
+    if (currentColor == fillColor || currentColor != originalColor) {
+      // printf("Skipping 2\n");
+      continue;
+    }
+    pixels[y * SCREEN_WIDTH + x] = fillColor;
+    if (x + 1 < SCREEN_WIDTH &&
+        pixels[y * SCREEN_WIDTH + x + 1] == currentColor) {
+      push(stack, x + 1, y);
+    }
+    if (x - 1 >= 0 && pixels[y * SCREEN_WIDTH + x - 1] == currentColor) {
+      push(stack, x - 1, y);
+    }
+    if (y + 1 < SCREEN_HEIGHT &&
+        pixels[(y + 1) * SCREEN_WIDTH + x] == currentColor) {
+      push(stack, x, y + 1);
+    }
+    if (y - 1 >= 0 && pixels[(y - 1) * SCREEN_WIDTH + x] == currentColor) {
+      push(stack, x, y - 1);
+    }
+  }
+  destroy(stack);
 }
