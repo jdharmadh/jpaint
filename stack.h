@@ -8,8 +8,8 @@ typedef struct {
 } Point;
 
 typedef struct {
-  u_int16_t top;  // top represents next available slot, 0 if empty
-  u_int16_t capacity;
+  u_int32_t top;  // top represents next available slot, 0 if empty
+  u_int32_t capacity;
   Point* array;
 } Stack;
 

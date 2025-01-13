@@ -124,7 +124,7 @@ int main(int argc, char *argv[]) {
                     // erase brush
                     pixels[drawY * SCREEN_WIDTH + drawX] = 0xFFFFFFFF;
                   } else if (brushShape == ERASE_FILL) {
-                    // erase fill
+                    fill(pixels, drawX, drawY, 0xFFFFFFFF);
                   }
                 }
               }
@@ -196,40 +196,44 @@ int main(int argc, char *argv[]) {
 }
 
 void fill(uint32_t *pixels, int x, int y, uint32_t fillColor) {
+  if (x < 0 || x >= SCREEN_WIDTH || y < 0 || y >= SCREEN_HEIGHT) {
+    return;
+  }
+
   Stack *stack = createStack(1000);
   uint32_t originalColor = pixels[y * SCREEN_WIDTH + x];
+  if (originalColor == fillColor) {
+    destroy(stack);
+    return;
+  }
+
   push(stack, x, y);
   while (!isEmpty(stack)) {
-    // printf("Stack size: %d\n", stack->top);
-    // printf("Original color: %x\n", originalColor);
-    // printf("Fill color: %x\n", fillColor);
     Point p = pop(stack);
     x = p.x;
     y = p.y;
+
     if (x < 0 || x >= SCREEN_WIDTH || y < 0 || y >= SCREEN_HEIGHT) {
-      // printf("Skipping 1\n");
-      // printf("x: %d, y: %d\n", x, y);
       continue;
     }
+
     uint32_t currentColor = pixels[y * SCREEN_WIDTH + x];
-    // printf("Current color: %x\n", currentColor);
-    if (currentColor == fillColor || currentColor != originalColor) {
-      // printf("Skipping 2\n");
+    if (currentColor != originalColor) {
       continue;
     }
+
     pixels[y * SCREEN_WIDTH + x] = fillColor;
-    if (x + 1 < SCREEN_WIDTH &&
-        pixels[y * SCREEN_WIDTH + x + 1] == currentColor) {
+
+    if (x + 1 < SCREEN_WIDTH) {
       push(stack, x + 1, y);
     }
-    if (x - 1 >= 0 && pixels[y * SCREEN_WIDTH + x - 1] == currentColor) {
+    if (x - 1 >= 0) {
       push(stack, x - 1, y);
     }
-    if (y + 1 < SCREEN_HEIGHT &&
-        pixels[(y + 1) * SCREEN_WIDTH + x] == currentColor) {
+    if (y + 1 < SCREEN_HEIGHT) {
       push(stack, x, y + 1);
     }
-    if (y - 1 >= 0 && pixels[(y - 1) * SCREEN_WIDTH + x] == currentColor) {
+    if (y - 1 >= 0) {
       push(stack, x, y - 1);
     }
   }
