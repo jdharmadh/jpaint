@@ -12,6 +12,12 @@ const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
 
 void fill(uint32_t *pixels, int x, int y, uint32_t fillColor);
+void drawIcon(uint32_t *pixels, int x, int y, uint32_t color, int size,
+              int brushShape);
+void drawSquare(uint32_t *pixels, int x, int y, uint32_t color,
+                int side_length);
+void drawCircle(uint32_t *pixels, int x, int y, uint32_t color, int radius);
+uint32_t makeColorLighter(uint32_t color);
 
 int main(int argc, char *argv[]) {
   SDL_Window *window;
@@ -176,6 +182,9 @@ int main(int argc, char *argv[]) {
       }
     }
 
+    drawIcon(pixels, SCREEN_WIDTH - 40, SCREEN_HEIGHT - 40, brushColor, 20,
+             brushShape);
+
     // Update the texture with the pixel buffer
     SDL_UpdateTexture(texture, NULL, pixels, SCREEN_WIDTH * sizeof(uint32_t));
 
@@ -238,4 +247,64 @@ void fill(uint32_t *pixels, int x, int y, uint32_t fillColor) {
     }
   }
   destroy(stack);
+}
+
+void drawIcon(uint32_t *pixels, int x, int y, uint32_t color, int size,
+              int brushShape) {
+  drawSquare(pixels, x, y, makeColorLighter(color), size);
+  if (brushShape == CIRCULAR) {
+    drawCircle(pixels, x, y, color, size);
+  } else if (brushShape == SQUARE || brushShape == FILL) {
+    drawSquare(pixels, x, y, color, size);
+  } else if (brushShape == ERASE_BRUSH) {
+    drawSquare(pixels, x, y, 0xFF000000, size);
+    drawSquare(pixels, x, y, 0xFFFFFFFF, size - 6);
+  } else if (brushShape == ERASE_FILL) {
+    drawSquare(pixels, x, y, makeColorLighter(0xFF000000), size);
+    drawCircle(pixels, x, y, 0xFF000000, size);
+    drawCircle(pixels, x, y, 0xFFFFFFFF, size - 3);
+  }
+}
+
+void drawSquare(uint32_t *pixels, int x, int y, uint32_t color,
+                int side_length) {
+  for (int dy = -side_length / 2; dy <= side_length / 2; dy++) {
+    for (int dx = -side_length / 2; dx <= side_length / 2; dx++) {
+      int drawX = x + dx;
+      int drawY = y + dy;
+
+      if (drawX >= 0 && drawX < SCREEN_WIDTH && drawY >= 0 &&
+          drawY < SCREEN_HEIGHT) {
+        pixels[drawY * SCREEN_WIDTH + drawX] = color;
+      }
+    }
+  }
+}
+
+void drawCircle(uint32_t *pixels, int x, int y, uint32_t color, int radius) {
+  for (int dy = -radius / 2; dy <= radius / 2; dy++) {
+    for (int dx = -radius / 2; dx <= radius / 2; dx++) {
+      if (dx * dx + dy * dy < (radius / 2) * (radius / 2)) {
+        int drawX = x + dx;
+        int drawY = y + dy;
+
+        if (drawX >= 0 && drawX < SCREEN_WIDTH && drawY >= 0 &&
+            drawY < SCREEN_HEIGHT) {
+          pixels[drawY * SCREEN_WIDTH + drawX] = color;
+        }
+      }
+    }
+  }
+}
+
+uint32_t makeColorLighter(uint32_t color) {
+  uint8_t r = (color & 0x00FF0000) >> 16;
+  uint8_t g = (color & 0x0000FF00) >> 8;
+  uint8_t b = (color & 0x000000FF);
+
+  r = (r + 255) / 2;
+  g = (g + 255) / 2;
+  b = (b + 255) / 2;
+
+  return 0xFF000000 | (r << 16) | (g << 8) | b;
 }
